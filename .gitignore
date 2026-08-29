@@ -1,0 +1,11 @@
+data/raw/
+data/processed/
+results/checkpoints/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.pth
+*.onnx
+*.pt
+*.dcm
+.DS_Store
