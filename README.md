@@ -1,31 +1,30 @@
 # Real-Time 2D MRI Organ Segmentation (Attention U-Net vs Baseline U-Net)
 
-Portfolio research project: lightweight Attention U-Net for real-time abdominal organ
-segmentation on 2D MRI, benchmarked against a plain U-Net baseline, with real-time
-inference latency validation (<150ms/frame target).
+Research project: statistically rigorous comparison of Attention U-Net vs Baseline U-Net
+for real-time abdominal organ segmentation on 2D MRI, with real-time inference validation.
 
-## Key Results (Test Set, n=3 held-out patients)
+## Key Finding (5-seed statistical validation)
 
-| Organ | Baseline U-Net | Attention U-Net | Diff |
-|---|---|---|---|
-| Liver | 0.8969 | 0.9117 | +0.0149 |
-| Right Kidney | 0.7979 | 0.8078 | +0.0098 |
-| Left Kidney | 0.7619 | 0.8092 | +0.0472 |
-| Spleen | 0.8155 | 0.8065 | -0.0090 |
-| **Mean (organs)** | **0.8181** | **0.8338** | **+0.0157** |
+| Model | Mean Test Dice | Std Dev |
+|---|---|---|
+| Baseline U-Net | 0.8204 | ± 0.0278 |
+| Attention U-Net | 0.8014 | ± 0.0232 |
 
-Full results, per-patient robustness analysis, and error analysis: see
-[`results/metrics_report.md`](results/metrics_report.md).
+**No statistically significant difference** (paired t=0.86, p≈0.44) across 5 independent
+seeds. This finding — reached only after moving from single-run to multi-seed evaluation —
+highlights the importance of statistical rigor in small-dataset medical imaging research,
+where single-run comparisons can be misleading due to high variance.
+
+Full results, per-seed breakdown, and error analysis: [`results/metrics_report.md`](results/metrics_report.md).
 
 ## Real-Time Inference Latency (Attention U-Net, Colab T4 GPU)
-| Configuration | Mean (ms) | P95 (ms) | Meets <150ms target |
-|---|---|---|---|
-| PyTorch Eager | 13.49 | 20.00 | Yes |
-| TorchScript | 10.79 | 11.10 | Yes |
+| Configuration | Mean (ms) | Meets <150ms target |
+|---|---|---|
+| PyTorch Eager | ~12 | Yes |
+| TorchScript | ~11 | Yes |
 
 ## Dataset
-[CHAOS](https://chaos.grand-challenge.org/) — MRI T1DUAL InPhase, 20 patients,
-liver/kidneys/spleen. Patient-wise split (14/3/3) to prevent data leakage.
-Not included in this repo (requires registration).
+[CHAOS](https://chaos.grand-challenge.org/) — 20 patients, MRI T1DUAL InPhase,
+liver/kidneys/spleen. Patient-wise split (14/3/3), leak-free.
 
 ## Project Structure
