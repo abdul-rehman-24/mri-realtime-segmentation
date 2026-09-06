@@ -126,3 +126,14 @@ CHAOS provides only axial acquisitions. Sagittal and coronal views were generate
 | Coronal (derived) | ~0.0000 | 0.4663 |
 
 **Finding**: Cross-sequence robustness (intensity-domain shift) was fully resolved with modest additional data. Cross-orientation robustness (geometric-domain shift) improved substantially over the zero-shot baseline (near-total collapse) but remains partial (~0.47-0.47 Dice) even after adding more derived training slices -- consistent with orientation shift being a harder domain gap than intensity shift, requiring either more derived data, native multi-orientation acquisitions, or orientation-specific fine-tuning to fully close.
+
+
+## Sub-Pixel Localization — Soft-Probability vs Hard-Mask Centroid
+Investigated whether soft-probability-weighted centroid estimation (interpolation-based, sub-pixel) improves organ localization accuracy over standard hard-threshold (argmax) centroid, for the liver class on the T1DUAL test set (n=73 slices with liver present).
+
+| Method | Mean centroid error (px) | Std dev |
+|---|---|---|
+| Hard-mask (argmax) centroid | 4.851 | 12.297 |
+| Soft-probability centroid | 5.301 | 12.968 |
+
+**Finding**: Soft-probability centroid weighting did not improve localization accuracy over the hard-mask centroid in this setting (5.30px vs 4.85px mean error). This is consistent with the model producing confident, low-entropy predictions (a result of BatchNorm and attention-gated decoding), leaving little soft-boundary information for interpolation to exploit. Sub-pixel refinement is likely to matter more for smaller or more ambiguous structures (e.g. kidney/spleen boundaries, or partial-volume edge slices) than for the well-segmented liver -- a natural direction for future work.
