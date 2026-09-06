@@ -74,3 +74,42 @@ added architectural complexity of attention gates does not reliably translate in
 measurable segmentation improvement, and that single-run comparisons (as in early 
 iterations of this experiment) are unreliable due to high run-to-run variance — 
 underscoring the necessity of multi-seed evaluation in small-dataset medical imaging research.
+
+
+## Cross-Sequence Generalization Test (T1DUAL-trained -> T2SPIR)
+Attention U-Net trained exclusively on T1DUAL InPhase was evaluated on the same held-out test patients' T2SPIR scans (unseen sequence, unseen contrast).
+
+| Organ | T1DUAL (same-seq) Dice | T2SPIR (cross-seq) Dice |
+|---|---|---|
+| Liver | 0.9117 | 0.0003 |
+| Right Kidney | 0.8078 | 0.0000 |
+| Left Kidney | 0.8092 | 0.0000 |
+| Spleen | 0.8065 | 0.0000 |
+| **Mean (organs)** | **0.8338** | **0.0001** |
+
+**Finding**: Complete generalization failure (near-zero Dice) across the sequence shift. Confidence analysis confirms the model is *confidently wrong*, not merely uncertain — mean softmax probability at true-liver pixels was 0.98 for Background vs 0.01 for Liver. This is consistent with T1 and T2SPIR (fat-suppressed) having near-inverted tissue contrast (fat bright/fluid dark in T1 vs. the reverse in T2SPIR), and the model having overfit to T1's specific intensity distribution rather than learning contrast-invariant organ shape features.
+
+
+## Cross-Sequence Generalization Test (T1DUAL-trained -> T2SPIR)
+Attention U-Net trained exclusively on T1DUAL InPhase was evaluated on the same held-out test patients' T2SPIR scans (unseen sequence, unseen contrast).
+
+| Organ | T1DUAL (same-seq) Dice | T2SPIR (cross-seq) Dice |
+|---|---|---|
+| Liver | 0.9117 | 0.0003 |
+| Right Kidney | 0.8078 | 0.0000 |
+| Left Kidney | 0.8092 | 0.0000 |
+| Spleen | 0.8065 | 0.0000 |
+| **Mean (organs)** | **0.8338** | **0.0001** |
+
+**Finding**: Complete generalization failure (near-zero Dice) across the sequence shift. Confidence analysis confirms the model is *confidently wrong*, not merely uncertain — mean softmax probability at true-liver pixels was 0.98 for Background vs 0.01 for Liver. This is consistent with T1 and T2SPIR (fat-suppressed) having near-inverted tissue contrast (fat bright/fluid dark in T1 vs. the reverse in T2SPIR), and the model having overfit to T1's specific intensity distribution rather than learning contrast-invariant organ shape features.
+
+
+## Fix: Multi-Sequence Training (T1DUAL + T2SPIR combined)
+Retrained Attention U-Net on combined T1DUAL + T2SPIR data (same patients, same split) to address the cross-sequence collapse identified above.
+
+| Test set | T1-only model | Multi-seq model |
+|---|---|---|
+| T1DUAL | 0.8338 | 0.8273 |
+| T2SPIR | 0.0001 | 0.8132 |
+
+**Result**: Multi-sequence training resolved the generalization failure (T2SPIR Dice: 0.0001 -> 0.8132) with negligible cost to T1DUAL performance (-0.0065). This confirms the earlier failure was a data-distribution gap, not an architectural limitation, and that a single combined-sequence training pass is sufficient to fix it.
