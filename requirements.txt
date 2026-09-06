@@ -1,0 +1,13 @@
+torch>=2.0
+torchvision
+numpy
+opencv-python
+pydicom
+nibabel
+albumentations
+scikit-learn
+matplotlib
+Pillow
+onnx
+onnxruntime
+scipy
