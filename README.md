@@ -1,10 +1,10 @@
 # Real-Time 2D MRI Organ Segmentation — Statistically Validated, Multi-Sequence & Multi-Orientation Robust Attention U-Net
 
 Research-portfolio project: real-time abdominal organ segmentation on 2D MRI (CHAOS dataset),
-built around three research questions — architecture comparison rigor, cross-sequence
-generalization, and cross-orientation generalization — each investigated, diagnosed, and
-(where possible) fixed with quantified results. Real-time inference latency validated
-against a <150ms/frame constraint.
+built around four research questions — architecture comparison rigor, cross-sequence
+generalization, cross-orientation generalization, and sub-pixel localization — each
+investigated, diagnosed, and (where possible) fixed with quantified results. Real-time
+inference latency validated against a <150ms/frame constraint.
 
 ## Key Finding 1 — Statistical Rigor (5-seed validation)
 
@@ -47,6 +47,24 @@ training data — indicating that geometric domain shift (organ shape/size chang
 planes) is a harder gap to close than the intensity shift in Finding 2, and would benefit
 from native multi-orientation data or orientation-specific fine-tuning.
 
+## Key Finding 4 — Sub-Pixel Localization: Investigated
+
+Compared soft-probability-weighted centroid estimation (interpolation-based, sub-pixel)
+against standard hard-threshold (argmax) centroid, for the liver class on the T1DUAL test
+set (n=73 slices with liver present).
+
+| Method | Mean centroid error (px) | Std dev |
+|---|---|---|
+| Hard-mask (argmax) centroid | 4.851 | 12.297 |
+| Soft-probability centroid | 5.301 | 12.968 |
+
+Soft-probability centroid weighting did not improve localization accuracy over the hard-mask
+centroid in this setting. This is consistent with the model producing confident, low-entropy
+predictions (a result of BatchNorm and attention-gated decoding), leaving little soft-boundary
+information for interpolation to exploit. Sub-pixel refinement is likely to matter more for
+smaller or more ambiguous structures (e.g. kidney/spleen boundaries, or partial-volume edge
+slices) than for the well-segmented liver.
+
 Full results, per-seed and per-view breakdowns, and error analysis:
 [`results/metrics_report.md`](results/metrics_report.md).
 
@@ -66,19 +84,22 @@ liver/kidneys/spleen. Patient-wise split (14/3/3), leak-free.
 
 - src/ — datasets, preprocessing, models, losses, metrics, train.py
 - inference/ — latency benchmarking
+- notebooks/ — full end-to-end Colab notebook
 - results/ — metrics_report.md (full results + error analysis), figures/
 
 ## Known Limitations
 
 - Test/val sets are small (n=3 patients) — mitigated for the architecture comparison via
-  5-seed validation, but sequence/orientation numbers are single-run
+  5-seed validation, but sequence/orientation/sub-pixel numbers are single-run
 - Sagittal/coronal views are derived (multi-planar reformatting), not native acquisitions
+- Sub-pixel investigation covers the liver class only; smaller organs not yet tested
 - Chest organs not included (CHAOS is abdominal-only; would require an additional dataset)
 - ONNX Runtime GPU acceleration not benchmarked (CPU only)
 
 ## Future Work
 
-- Sub-pixel boundary/centroid refinement via soft-probability interpolation
+- Extend sub-pixel evaluation to smaller/more ambiguous organs (kidney, spleen) where soft
+  boundary information may be more informative
 - Native multi-orientation data or orientation-specific fine-tuning to close the remaining
   cross-orientation gap
 - Extension to chest organs (e.g. via ACDC or another cardiac/thoracic MRI dataset)
